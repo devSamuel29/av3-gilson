@@ -156,6 +156,24 @@ public class AvlTree<T extends Comparable<T>> {
         return node != null ? node.getHeight() : 0;
     }
 
+    public String getHashedValues() {
+        return getHashedValues(root);
+    }
+
+    private String getHashedValues(Node<T> node) {
+        if (node == null) {
+            return "";
+        }
+
+        StringBuilder sb = new StringBuilder();
+        sb.append(getHashedValues(node.getLeft()));
+        sb.append(node.getHashedValue());
+        sb.append(" ");
+        sb.append(getHashedValues(node.getRight()));
+
+        return sb.toString();
+    }
+
     @Override
     public String toString() {
         return inOrder(root);
