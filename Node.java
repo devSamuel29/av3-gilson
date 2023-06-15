@@ -13,20 +13,14 @@ public class Node<T extends Comparable<T>> {
 
     private Node<T> right;
 
-    private int height;
+    public int factorBalance;
 
     public Node(T data) {
         this.data = data;
         this.hashedValue = encryptSha1((String) data);
         this.left = null;
         this.right = null;
-    }
-
-    public Node(T data, Node<T> left, Node<T> right) {
-        this.data = data;
-        this.hashedValue = encryptSha1((String) data);
-        this.left = left;
-        this.right = right;
+        this.factorBalance = 0;
     }
 
     public T getData() {
@@ -45,28 +39,28 @@ public class Node<T extends Comparable<T>> {
         this.hashedValue = hashedValue;
     }
 
-    public Node<T> getLeft() {
+    public int getFactorBalance() {
+        return factorBalance;
+    }
+
+    public void setFactorBalance(int factorBalance) {
+        this.factorBalance = factorBalance;
+    }
+
+    public Node<T> getLeftChild() {
         return left;
     }
 
-    public void setLeft(Node<T> left) {
+    public void setLeftChild(Node<T> left) {
         this.left = left;
     }
 
-    public Node<T> getRight() {
+    public Node<T> getRightChild() {
         return right;
     }
 
-    public void setRight(Node<T> right) {
+    public void setRightChild(Node<T> right) {
         this.right = right;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public void setHeight(int height) {
-        this.height = height;
     }
 
     public String encryptSha1(String data) {

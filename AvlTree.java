@@ -1,7 +1,7 @@
 package arvore;
 
 public class AvlTree<T extends Comparable<T>> {
-    public Node<T> root;
+    private Node<T> root;
 
     public AvlTree() {
         root = null;
@@ -12,181 +12,144 @@ public class AvlTree<T extends Comparable<T>> {
     }
 
     private Node<T> insert(T data, Node<T> node) {
-        if (node == null) {
+        if(node == null) {
             return new Node<>(data);
         }
+
         if (data.compareTo(node.getData()) < 0) {
-            node.setLeft(insert(data, node.getLeft()));
+            if (node.getLeftChild() == null) {
+                node.setLeftChild(new Node<>(data));
+                node.factorBalance++;
+            } else {
+                node.setLeftChild(insert(data, node.getLeftChild()));
+                if (node.getLeftChild().getFactorBalance() != 0) {
+                    node.factorBalance++;
+                }
+            }
         } else if (data.compareTo(node.getData()) > 0) {
-            node.setRight(insert(data, node.getRight()));
-        } else {
-            return node;
-        }
-        updateHeight(node);
-        return applyRotation(node);
-    }
-
-    public void delete(T data) {
-        root = delete(data, root);
-    }
-
-    private Node<T> delete(T data, Node<T> node) {
-        if (node == null) {
-            return null;
-        }
-        if (data.compareTo(node.getData()) < 0) {
-            node.setLeft(delete(data, node.getLeft()));
-        } else if (data.compareTo(node.getData()) > 0) {
-            node.setRight(delete(data, node.getRight()));
-        } else {
-            if (node.getLeft() == null) {
-                return node.getRight();
-            } else if (node.getRight() == null) {
-                return node.getLeft();
+            if (node.getRightChild() == null) {
+                node.setRightChild(new Node<>(data));
+                node.factorBalance--;
+            } else {
+                node.setRightChild(insert(data, node.getRightChild()));
+                if (node.getRightChild().getFactorBalance() != 0) {
+                    node.factorBalance--;
+                }
             }
-            node.setData(getMax(node.getLeft()));
-            node.setLeft(delete(node.getData(), node.getLeft()));
-        }
-        updateHeight(node);
-        return applyRotation(node);
-    }
-
-    public T getMax() {
-        if (root == null) {
-            return null;
-        }
-        return getMax(root);
-    }
-
-    private T getMax(Node<T> node) {
-        if (node.getRight() != null) {
-            return getMax(node.getRight());
-        }
-        return node.getData();
-    }
-
-    public T getMin() {
-        if (root == null) {
-            return null;
-        }
-        return getMin(root);
-    }
-
-    private T getMin(Node<T> node) {
-        if (node.getLeft() != null) {
-            return getMin(node.getLeft());
-        }
-        return node.getData();
-    }
-
-    public boolean isEmpty() {
-        return root == null;
-    }
-
-    public boolean contains(T data) {
-        return contains(root, data);
-    }
-
-    public boolean contains(Node<T> node, T data) {
-        if (node == null) {
-            return false;
         }
 
-        int compareResult = data.compareTo(node.getData());
-
-        if (compareResult < 0) {
-            return contains(node.getLeft(), data);
-        } else if (compareResult > 0) {
-            return contains(node.getRight(), data);
-        } else {
-            return true;
-        }
+        return balance(node);
     }
 
-    private Node<T> applyRotation(Node<T> node) {
-        int balance = balance(node);
-        if (balance > 1) {
-            if (balance(node.getLeft()) < 0) {
-                node.setLeft(rotateLeft(node.getLeft()));
+    private Node<T> balance(Node<T> node) {
+        if (node.getFactorBalance() >= 2) {
+            if (node.getLeftChild().getFactorBalance() >= 0) {
+                node = simpleRotateRight(node);
+            } else {
+                node = doubleRotateRight(node);
             }
-            return rotateRight(node);
-        }
-        if (balance < -1) {
-            if (balance(node.getRight()) > 0) {
-                node.setRight(rotateRight(node.getRight()));
+        } else if (node.getFactorBalance() <= -2) {
+            if (node.getRightChild().getFactorBalance() <= 0) {
+                node = simpleRotateLeft(node);
+            } else {
+                node = doubleRotateLeft(node);
             }
-            return rotateLeft(node);
         }
         return node;
     }
 
-    private Node<T> rotateRight(Node<T> node) {
-        Node<T> leftNode = node.getLeft();
-        Node<T> centerNode = leftNode.getRight();
-        leftNode.setRight(node);
-        node.setLeft(centerNode);
-        updateHeight(node);
-        updateHeight(leftNode);
-        return leftNode;
+    private Node<T> simpleRotateLeft(Node<T> node) {
+        Node<T> aux = node.getRightChild();
+        if (aux.getLeftChild() != null) {
+            node.setRightChild(aux.getLeftChild());
+            aux.setLeftChild(node);
+        } else {
+            aux.setLeftChild(node);
+            node.setRightChild(null);
+        }
+        updateBalanceFactor(aux);
+        updateBalanceFactor(node);
+        return aux;
     }
 
-    private Node<T> rotateLeft(Node<T> node) {
-        Node<T> rightNode = node.getRight();
-        Node<T> centerNode = rightNode.getLeft();
-        rightNode.setLeft(node);
-        node.setRight(centerNode);
-        updateHeight(node);
-        updateHeight(rightNode);
-        return rightNode;
+    private Node<T> doubleRotateLeft(Node<T> node) {
+        node = simpleRotateRight(node.getRightChild());
+        return simpleRotateLeft(node);
     }
 
-    private void updateHeight(Node<T> node) {
-        int maxHeight = Math.max(
-                height(node.getLeft()),
-                height(node.getRight())
-        );
-        node.setHeight(maxHeight + 1);
+    private Node<T> simpleRotateRight(Node<T> node) {
+        Node<T> aux = node.getLeftChild();
+        if (aux.getRightChild() != null) {
+            node.setLeftChild(aux.getRightChild());
+            aux.setRightChild(node);
+        } else {
+            aux.setRightChild(node);
+            node.setLeftChild(null);
+        }
+        updateBalanceFactor(aux);
+        updateBalanceFactor(node);
+        return aux;
     }
 
-    private int balance(Node<T> node) {
-        return node != null ? height(node.getLeft()) - height(node.getRight()) : 0;
+    private Node<T> doubleRotateRight(Node<T> node) {
+        node = simpleRotateLeft(node.getLeftChild());
+        return simpleRotateRight(node);
+    }
+
+    private void updateBalanceFactor(Node<T> node) {
+        node.setFactorBalance(leftChildHeight(node) - rightChildHeight(node));
     }
 
     private int height(Node<T> node) {
-        return node != null ? node.getHeight() : 0;
-    }
-
-    public String getHashedValues() {
-        return getHashedValues(root);
-    }
-
-    private String getHashedValues(Node<T> node) {
-        if (node == null) {
-            return "";
+        if (node != null) {
+            int leftFactorBalance = 0;
+            int rightFactorBalance = 0;
+            if (node.getLeftChild() != null && node.getRightChild() != null) {
+                leftFactorBalance = height(node.getLeftChild(), 1, 1);
+                rightFactorBalance = height(node.getRightChild(), 1, 1);
+            } else if (node.getLeftChild() != null) {
+                leftFactorBalance = height(node.getLeftChild(), 1, 0);
+            } else if (node.getRightChild() != null) {
+                rightFactorBalance = height(node.getRightChild(), 0, 1);
+            }
+            return Math.max(leftFactorBalance, rightFactorBalance);
         }
+        return -1;
+    }
 
-        StringBuilder sb = new StringBuilder();
-        sb.append(getHashedValues(node.getLeft()));
-        sb.append(node.getHashedValue());
-        sb.append(" ");
-        sb.append(getHashedValues(node.getRight()));
+    private int height(Node<T> node, int leftChildFactorBalance, int rightChildFactorBalance) {
+        if (node.getLeftChild() != null) {
+            leftChildFactorBalance = height(node.getLeftChild(), ++leftChildFactorBalance, rightChildFactorBalance);
+        }
+        if (node.getRightChild() != null) {
+            rightChildFactorBalance = height(node.getRightChild(), leftChildFactorBalance, ++rightChildFactorBalance);
+        }
+        return Math.max(leftChildFactorBalance, rightChildFactorBalance);
+    }
 
-        return sb.toString();
+    private int leftChildHeight(Node<T> node) {
+        return height(node.getLeftChild()) + 1;
+    }
+
+    private int rightChildHeight(Node<T> node) {
+        return height(node.getRightChild()) + 1;
     }
 
     @Override
     public String toString() {
-        return inOrder(root);
+        return toString(root);
     }
 
-    private String inOrder(Node<T> node) {
-        StringBuilder sb = new StringBuilder();
-        if (node != null) {
-            sb.append(inOrder(node.getLeft()));
-            sb.append(node.getData());
-            sb.append(" ");
-            sb.append(inOrder(node.getRight()));
+    private String toString(Node<T> node){
+        if(node.getLeftChild() != null && node.getRightChild() != null){
+            node.setHashedValue(node.encryptSha1(node.getHashedValue() + toString(node.getLeftChild()) + toString(node.getRightChild())));
         }
-        return sb.toString();
+        else if(node.getLeftChild() != null && node.getRightChild() == null){
+            node.setHashedValue(node.encryptSha1(node.getHashedValue() + toString(node.getLeftChild())));
+        }
+        else if(node.getLeftChild() == null && node.getRightChild() != null){
+            node.setHashedValue(node.encryptSha1(node.getHashedValue() + toString(node.getRightChild())));
+        }
+        return node.getHashedValue();
     }
 }

@@ -16,7 +16,7 @@ public class Main {
             for (String line = br.readLine(); line != null; line = br.readLine()) {
                 baseTxt.insert(line);
             }
-            System.out.println(baseTxt.getHashedValues());
+            System.out.println(baseTxt);
         } catch (IOException e) {
             e.printStackTrace();
         }
