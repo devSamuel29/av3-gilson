@@ -137,7 +137,10 @@ public class AvlTree<T extends Comparable<T>> {
 
     @Override
     public String toString() {
-        return toString(root);
+        if(root != null) {
+            return toString(root);
+        }
+        return "";
     }
 
     private String toString(Node<T> node){
